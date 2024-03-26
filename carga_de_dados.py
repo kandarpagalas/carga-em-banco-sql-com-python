@@ -37,15 +37,31 @@ def insert_values(conn, table: str, chunk: list[tuple]):
     conn.execute(text(stmt))
     conn.commit()
 
+# Inseres valores a paetir de uma lista de tuplas
+def create_table(conn, table: str):
+    stmt = f"""
+                CREATE TABLE {table} (
+                COD_UF 				INT4,
+                COD_MUN 			INT4,
+                COD_ESPECIE 		INT4,
+                LATITUDE 			FLOAT,
+                LONGITUDE 			FLOAT,
+                NV_GEO_COORD 		INT4
+            );"""
+    conn.execute(text(stmt))
+    conn.commit()
+
 
 def main():
     # contador para conferir quantidade de insersão no db
     total_lines = 0
 
     VERBOSE = True
-
+    # diretório com os arquivos csv
     INPUT_DATA_FOLDER = "dados_ibge/"
+    # tamanho dos chunks para garga no BD
     CHUNK_SIZE = 5000
+    # nome da tabela no banco de dados
     OUTPUT_TABLE = "ibge_data"
 
     # Create the engine to connect to the PostgreSQL database
@@ -55,6 +71,12 @@ def main():
 
     # Ordenei apenas para melhorar a visualização dos logs
     files.sort()
+
+    # cria a tabelo no BD caso não exista
+    with engine.connect() as conn:
+        if not engine.dialect.has_table(table_name=OUTPUT_TABLE,connection=conn):
+            create_table(conn, OUTPUT_TABLE)
+
 
     # Ler cada arquivo
     for file in files:
